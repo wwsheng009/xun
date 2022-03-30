@@ -92,14 +92,24 @@ func TestJoinJoinOnNested(t *testing.T) {
 func TestJoinJoinSubOn(t *testing.T) {
 	NewTableFoJoinTest()
 	qb := getTestBuilder()
-	qb.Table("table_test_join_t1 as t1").
+	
+    if unit.DriverIs("hdb"){
+		qb.Table("table_test_join_t1 as t1").
+		JoinSub(func(qb Query) {
+			qb.Select("t1_id as join_id", "title", "status").
+				From("table_test_join_t2")
+		}, "t2", `t2."join_id"`, "=", `t1."id"`).
+		Where("t2.status", "=", "PUBLISHED").
+		Select("t1.*", `t2."join_id"`, `t2."title" as "title"`)
+	}else{
+		qb.Table("table_test_join_t1 as t1").
 		JoinSub(func(qb Query) {
 			qb.Select("t1_id as join_id", "title", "status").
 				From("table_test_join_t2")
 		}, "t2", "t2.join_id", "=", "t1.id").
 		Where("t2.status", "=", "PUBLISHED").
 		Select("t1.*", "t2.join_id", "t2.title as title")
-
+	}
 	// qb.DD()
 
 	// select `t1`.*, `t2`.`join_id`, `t2`.`title` as `title` from `table_test_join_t1` as `t1` inner join (select `t1_id` as `join_id`, `title`, `status` from `table_test_join_t2`) as t2 on `t2`.`join_id` = `t1`.`id` where `t2`.`status` = ?

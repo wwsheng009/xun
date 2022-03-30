@@ -60,6 +60,8 @@ func TestLimitTakeUnion(t *testing.T) {
 	sql := qb.ToSQL()
 	if unit.DriverIs("postgres") {
 		assert.Equal(t, `(select "id", "name", "email" from "table_test_limit" where "id" = $1 ) union (select "id", "name", "email" from "table_test_limit" where "id" = $2) order by "id" desc limit 1`, sql, "the query sql not equal")
+	} else if unit.DriverIs("hdb") {
+		assert.Equal(t, `select "id", "name", "email" from "table_test_limit" where "id" = ?  union select "id", "name", "email" from "table_test_limit" where "id" = ? order by "id" desc limit 1`, sql, "the query sql not equal")
 	} else if unit.DriverIs("sqlite3") {
 		assert.Equal(t, "select * from (select `id`, `name`, `email` from `table_test_limit` where `id` = ? ) union select * from (select `id`, `name`, `email` from `table_test_limit` where `id` = ?) order by `id` desc limit 1", sql, "the query sql not equal")
 	} else {

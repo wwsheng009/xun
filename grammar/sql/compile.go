@@ -107,7 +107,7 @@ func (grammarSQL SQL) CompileAggregate(query *dbal.Query, aggregate dbal.Aggrega
 	} else if query.Distinct && column != "*" {
 		column = fmt.Sprintf("distinct %s", column)
 	}
-	return fmt.Sprintf("select %s(%s) as aggregate", aggregate.Func, column)
+	return fmt.Sprintf("select %s(%s) as \"aggregate\"", aggregate.Func, column)
 }
 
 // CompileUnions Compile the "union" queries attached to the main query.
@@ -160,7 +160,7 @@ func (grammarSQL SQL) CompileJoins(query *dbal.Query, joins []dbal.Join, offset 
 		table := grammarSQL.WrapTable(join.Name)
 		if join.SQL != nil && join.Alias != "" {
 			sql := grammarSQL.CompileSub(join.SQL, offset)
-			table = fmt.Sprintf("(%s) as %s", sql, join.Alias)
+			table = fmt.Sprintf("(%s) as %s", sql, grammarSQL.ID(join.Alias))
 		}
 		nestedJoins := " "
 		if len(join.Query.Joins) > 0 {

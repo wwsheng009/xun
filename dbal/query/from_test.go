@@ -25,7 +25,7 @@ func TestFromFrom(t *testing.T) {
 func TestFromFromRaw(t *testing.T) {
 	NewTableFoFromTest()
 	qb := getTestBuilder()
-	if unit.DriverIs("postgres") {
+	if unit.DriverIs("postgres") || unit.DriverIs("hdb") {
 		qb.FromRaw(`"table_test_from" as "t"`).
 			Where("email", "like", "%@yao.run").
 			Select("id", "t.email as wid", "t.cate as category").
@@ -61,6 +61,8 @@ func TestFromFromSub(t *testing.T) {
 	sql := qb.ToSQL()
 	if unit.DriverIs("postgres") {
 		assert.Equal(t, `select * from (select "id", "t"."email" as "wid", "t"."cate" as "category" from "table_test_from" as "t" where "email" like $1 order by "id" asc) as "t" where "t"."category" = $2 order by "t"."id" desc`, sql, "the query sql not equal")
+	} else if unit.DriverIs("hdb") {
+		assert.Equal(t, `select * from (select "id", "t"."email" as "wid", "t"."cate" as "category" from "table_test_from" as "t" where "email" like ? order by "id" asc) as "t" where "t"."category" = ? order by "t"."id" desc`, sql, "the query sql not equal")
 	} else {
 		assert.Equal(t, "select * from (select `id`, `t`.`email` as `wid`, `t`.`cate` as `category` from `table_test_from` as `t` where `email` like ? order by `id` asc) as `t` where `t`.`category` = ? order by `t`.`id` desc", sql, "the query sql not equal")
 	}
@@ -110,6 +112,8 @@ func checkingFromFrom(t *testing.T, qb Query) {
 	sql := qb.ToSQL()
 	if unit.DriverIs("postgres") {
 		assert.Equal(t, `select "id", "t"."email" as "wid", "t"."cate" as "category" from "table_test_from" as "t" where "email" like $1 order by "id" asc`, sql, "the query sql not equal")
+	} else if unit.DriverIs("hdb") {
+		assert.Equal(t, `select "id", "t"."email" as "wid", "t"."cate" as "category" from "table_test_from" as "t" where "email" like ? order by "id" asc`, sql, `the query sql not equal`)
 	} else {
 		assert.Equal(t, "select `id`, `t`.`email` as `wid`, `t`.`cate` as `category` from `table_test_from` as `t` where `email` like ? order by `id` asc", sql, "the query sql not equal")
 	}

@@ -9,6 +9,7 @@ import (
 
 // Insert Insert new records into the database.
 func (builder *Builder) Insert(v interface{}, columns ...interface{}) error {
+
 	columns, values := builder.prepareInsertValues(v, columns...)
 	sql, bindings := builder.Grammar.CompileInsert(builder.Query, columns, values)
 	defer log.With(log.F{"bindings": bindings}).Debug(sql)
@@ -19,7 +20,8 @@ func (builder *Builder) Insert(v interface{}, columns ...interface{}) error {
 	}
 	defer stmt.Close()
 
-	_, err = stmt.Exec(bindings...)
+	_, err = utils.StmtExec(stmt, bindings)
+
 	return err
 }
 
@@ -41,7 +43,9 @@ func (builder *Builder) InsertOrIgnore(v interface{}, columns ...interface{}) (i
 	}
 	defer stmt.Close()
 
-	res, err := stmt.Exec(bindings...)
+	// res, err := stmt.Exec(bindings...)
+	res, err := utils.StmtExec(stmt, bindings)
+
 	if err != nil {
 		return 0, err
 	}
@@ -68,6 +72,8 @@ func (builder *Builder) InsertGetID(v interface{}, args ...interface{}) (int64, 
 
 	columns, values := builder.prepareInsertValues(v, columns...)
 	sql, bindings := builder.Grammar.CompileInsertGetID(builder.Query, columns, values, seq)
+	fmt.Println(sql)
+	fmt.Println(bindings)
 	defer log.With(log.F{"bindings": bindings}).Debug(sql)
 	return builder.Grammar.ProcessInsertGetID(sql, bindings, seq)
 }
@@ -92,8 +98,8 @@ func (builder *Builder) InsertUsing(qb interface{}, columns ...interface{}) (int
 		return 0, err
 	}
 	defer stmt.Close()
-
-	res, err := stmt.Exec(bindings...)
+	res, err := utils.StmtExec(stmt, bindings)
+	// res, err := stmt.Exec(bindings...)
 	if err != nil {
 		return 0, err
 	}

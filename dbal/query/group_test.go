@@ -15,7 +15,7 @@ func TestGroupGroupBy(t *testing.T) {
 	qb := getTestBuilder()
 	qb.Table("table_test_group").
 		Where("email", "like", "%@yao.run").
-		Select("status", dbal.Raw("Count(id) as cnt")).
+		Select("status", dbal.Raw(`Count("id") as "cnt"`)).
 		GroupBy("status")
 
 	// select `status`, Count(id) as cnt from `table_test_group` where `email` like ? group by `status`
@@ -29,12 +29,17 @@ func TestGroupGroupByRaw(t *testing.T) {
 	if unit.DriverIs("postgres") {
 		qb.Table("table_test_group").
 			Where("email", "like", "%@yao.run").
-			Select("status", dbal.Raw("Count(id) as cnt")).
+			Select("status", dbal.Raw(`Count("id") as "cnt"`)).
+			GroupByRaw(`"status"`)
+	} else if unit.DriverIs("hdb") {
+		qb.Table("table_test_group").
+			Where("email", "like", "%@yao.run").
+			Select("status", dbal.Raw(`Count("id") as "cnt"`)).
 			GroupByRaw(`"status"`)
 	} else {
 		qb.Table("table_test_group").
 			Where("email", "like", "%@yao.run").
-			Select("status", dbal.Raw("Count(id) as cnt")).
+			Select("status", dbal.Raw(`Count("id") as "cnt"`)).
 			GroupByRaw("`status`")
 	}
 
@@ -48,7 +53,7 @@ func TestGroupHaving(t *testing.T) {
 	qb := getTestBuilder()
 	qb.Table("table_test_group").
 		Where("email", "like", "%@yao.run").
-		Select("status", dbal.Raw("Count(id) as cnt")).
+		Select("status", dbal.Raw(`Count("id") as "cnt"`)).
 		GroupBy("status").
 		Having("status", "=", "DONE")
 
@@ -62,7 +67,7 @@ func TestGroupOrHaving(t *testing.T) {
 	qb := getTestBuilder()
 	qb.Table("table_test_group").
 		Where("email", "like", "%@yao.run").
-		Select("status", dbal.Raw("Count(id) as cnt")).
+		Select("status", dbal.Raw(`Count("id") as "cnt"`)).
 		GroupBy("status").
 		Having("status", "=", "DONE").
 		OrHaving("status", "=", "PENDING")
@@ -78,13 +83,19 @@ func TestGroupHavingRaw(t *testing.T) {
 	if unit.DriverIs("postgres") {
 		qb.Table("table_test_group").
 			Where("email", "like", "%@yao.run").
-			Select("status", dbal.Raw("Count(id) as cnt")).
+			Select("status", dbal.Raw(`Count("id") as "cnt"`)).
 			GroupBy("status").
 			HavingRaw(`"status" = $2`, "DONE")
+	} else if unit.DriverIs("hdb") {
+		qb.Table("table_test_group").
+			Where("email", "like", "%@yao.run").
+			Select("status", dbal.Raw(`Count("id") as "cnt"`)).
+			GroupBy("status").
+			HavingRaw(`"status" = ?`, "DONE")
 	} else {
 		qb.Table("table_test_group").
 			Where("email", "like", "%@yao.run").
-			Select("status", dbal.Raw("Count(id) as cnt")).
+			Select("status", dbal.Raw(`Count("id") as "cnt"`)).
 			GroupBy("status").
 			HavingRaw("`status` = ?", "DONE")
 	}
@@ -99,14 +110,14 @@ func TestGroupOrHavingRaw(t *testing.T) {
 	if unit.DriverIs("postgres") {
 		qb.Table("table_test_group").
 			Where("email", "like", "%@yao.run").
-			Select("status", dbal.Raw("Count(id) as cnt")).
+			Select("status", dbal.Raw(`Count("id") as "cnt"`)).
 			GroupBy("status").
 			Having("status", "=", "DONE").
 			OrHavingRaw(`"status" = $3`, "PENDING")
 	} else {
 		qb.Table("table_test_group").
 			Where("email", "like", "%@yao.run").
-			Select("status", dbal.Raw("Count(id) as cnt")).
+			Select("status", dbal.Raw(`Count("id") as "cnt"`)).
 			GroupBy("status").
 			Having("status", "=", "DONE").
 			OrHavingRaw("`status` = ?", "PENDING")
@@ -122,7 +133,7 @@ func TestGroupHavingBetween(t *testing.T) {
 	qb := getTestBuilder()
 	qb.Table("table_test_group").
 		Where("email", "like", "%@yao.run").
-		Select("vote", dbal.Raw("Count(id) as cnt")).
+		Select("vote", dbal.Raw(`Count("id") as "cnt"`)).
 		GroupBy("vote").
 		HavingBetween("vote", []int{5, 7})
 
@@ -153,7 +164,7 @@ func TestGroupHavingBetweenInt(t *testing.T) {
 	qb := getTestBuilder()
 	qb.Table("table_test_group").
 		Where("email", "like", "%@yao.run").
-		Select("vote", dbal.Raw("Count(id) as cnt")).
+		Select("vote", dbal.Raw(`Count("id") as "cnt"`)).
 		GroupBy("vote").
 		HavingBetween("vote", []int{5, 7, 9})
 
@@ -184,7 +195,7 @@ func TestGroupOrHavingBetween(t *testing.T) {
 	qb := getTestBuilder()
 	qb.Table("table_test_group").
 		Where("email", "like", "%@yao.run").
-		Select("vote", dbal.Raw("Count(id) as cnt")).
+		Select("vote", dbal.Raw("Count(id) as \"cnt\"")).
 		GroupBy("vote").
 		Having("vote", "=", 8).
 		OrHavingBetween("vote", []int{5, 7}).
@@ -255,6 +266,8 @@ func checkGroupHaving(t *testing.T, qb Query) {
 	sql := qb.ToSQL()
 	if unit.DriverIs("postgres") {
 		assert.Equal(t, `select "status", Count(id) as cnt from "table_test_group" where "email" like $1 group by "status" having "status" = $2`, sql, "the query sql not equal")
+	} else if unit.DriverIs("hdb") {
+		assert.Equal(t, `select "status", Count(id) as cnt from "table_test_group" where "email" like ? group by "status" having "status" = ?`, sql, "the query sql not equal")
 	} else {
 		assert.Equal(t, "select `status`, Count(id) as cnt from `table_test_group` where `email` like ? group by `status` having `status` = ?", sql, "the query sql not equal")
 	}
@@ -300,7 +313,9 @@ func checkGroupGroupBy(t *testing.T, qb Query) {
 	// checking sql
 	sql := qb.ToSQL()
 	if unit.DriverIs("postgres") {
-		assert.Equal(t, `select "status", Count(id) as cnt from "table_test_group" where "email" like $1 group by "status"`, sql, "the query sql not equal")
+		assert.Equal(t, `select "status", Count(id) as "cnt" from "table_test_group" where "email" like $1 group by "status"`, sql, "the query sql not equal")
+	} else if unit.DriverIs("hdb") {
+		assert.Equal(t, `select "status", Count("id") as "cnt" from "table_test_group" where "email" like ? group by "status"`, sql, "the query sql not equal")
 	} else {
 		assert.Equal(t, "select `status`, Count(id) as cnt from `table_test_group` where `email` like ? group by `status`", sql, "the query sql not equal")
 	}
@@ -310,6 +325,9 @@ func checkGroupGroupBy(t *testing.T, qb Query) {
 	assert.Equal(t, 3, len(rows), "the return value should has 3 rows")
 	if len(rows) == 3 {
 		if unit.DriverIs("sqlite3") {
+			assert.Equal(t, int64(2), rows[0]["cnt"].(int64), "the cnt of first row should be 2")
+			assert.Equal(t, "DONE", rows[0]["status"].(string), "the status of first row should be DONE")
+		} else if unit.DriverIs("hdb") {
 			assert.Equal(t, int64(2), rows[0]["cnt"].(int64), "the cnt of first row should be 2")
 			assert.Equal(t, "DONE", rows[0]["status"].(string), "the status of first row should be DONE")
 		} else {

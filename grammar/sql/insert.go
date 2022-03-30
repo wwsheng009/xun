@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/yaoapp/xun/dbal"
+	"github.com/yaoapp/xun/utils"
 )
 
 // CompileInsert Compile an insert statement into SQL.
@@ -49,7 +50,8 @@ func (grammarSQL SQL) ProcessInsertGetID(sql string, bindings []interface{}, seq
 	}
 
 	defer stmt.Close()
-	res, err := stmt.Exec(bindings...)
+	// res, err := stmt.Exec(bindings...)
+	res, err := utils.StmtExec(stmt, bindings)
 	if err != nil {
 		return 0, err
 	}

@@ -121,7 +121,7 @@ func TestWhereWhereClosure(t *testing.T) {
 				qb.Where("created_at", "<", "2021-03-25 19:00:00")
 			})
 		}).
-		Where("score", ">", 5)
+		Where("score", ">", 5.0)
 
 	// select * from `table_test_where` where `email` like ? and (`vote` > ? and `name` = ? and (`created_at` > ? and `created_at` < ?)) and `score` > ?
 	// select * from "table_test_where" where "email" like $1 and ("vote" > $2 and "name" = $3 and ("created_at" > $4 and "created_at" < $5)) and "score" > $6
@@ -130,6 +130,8 @@ func TestWhereWhereClosure(t *testing.T) {
 	sql := qb.ToSQL()
 	if unit.DriverIs("postgres") {
 		assert.Equal(t, `select * from "table_test_where" where "email" like $1 and ("vote" > $2 and "name" = $3 and ("created_at" > $4 and "created_at" < $5)) and "score" > $6`, sql, "the query sql not equal")
+	} else if unit.DriverIs("hdb") {
+		assert.Equal(t, `select * from "table_test_where" where "email" like ? and ("vote" > ? and "name" = ? and ("created_at" > ? and "created_at" < ?)) and "score" > ?`, sql, "the query sql not equal")
 	} else {
 		assert.Equal(t, "select * from `table_test_where` where `email` like ? and (`vote` > ? and `name` = ? and (`created_at` > ? and `created_at` < ?)) and `score` > ?", sql, "the query sql not equal")
 	}
@@ -143,7 +145,7 @@ func TestWhereWhereClosure(t *testing.T) {
 		assert.Equal(t, "Ken", bindings[2].(string), "the 3rd binding should be Ken")
 		assert.Equal(t, "2021-03-25 08:00:00", bindings[3].(string), "the 4th binding should be 2021-03-25 08:00:00")
 		assert.Equal(t, "2021-03-25 19:00:00", bindings[4].(string), "the 5th binding should be 2021-03-25 19:00:00")
-		assert.Equal(t, int(5), bindings[5].(int), "the 5th binding should be 2021-03-25 19:00:00")
+		assert.Equal(t, float64(5), bindings[5].(float64), "the 5th binding should be 2021-03-25 19:00:00")
 	}
 
 	// checking result
@@ -223,7 +225,7 @@ func TestWhereWhereQueryable(t *testing.T) {
 		Where("email", "like", "%@yao.run").
 		Where(func(sub Query) {
 			sub.From("table_test_where").
-				SelectRaw("AVG(score) as score").
+				SelectRaw(`AVG("score") as score`).
 				Where("score", ">", 49.15)
 		}, "<", 90.15).
 		Where("score", ">", 97.15)
@@ -262,7 +264,7 @@ func TestWhereWhereValueIsClosure(t *testing.T) {
 		Where("email", "like", "%@yao.run").
 		Where("vote", ">", func(sub Query) {
 			sub.From("table_test_where").
-				SelectRaw("MIN(vote) as vote").
+				SelectRaw(`MIN("vote") as vote`).
 				Where("score", ">", 90.00)
 		})
 
@@ -484,14 +486,22 @@ func TestWhereWhereNullArray(t *testing.T) {
 func TestWhereOrWhereNull(t *testing.T) {
 	NewTableForWhereTest()
 	qb := getTestBuilder()
-	qb.Table("table_test_where").
-		WhereRaw("true").
-		OrWhereNull("deleted_at")
 
+	if unit.DriverIs("hdb") {
+		qb.Table("table_test_where").
+			WhereRaw("1 = 1").
+			OrWhereNull("deleted_at")
+	} else {
+		qb.Table("table_test_where").
+			WhereRaw("true").
+			OrWhereNull("deleted_at")
+	}
 	// checking sql
 	sql := qb.ToSQL()
 	if unit.DriverIs("postgres") {
 		assert.Equal(t, `select * from "table_test_where" where true or "deleted_at" is null`, sql, "the query sql not equal")
+	} else if unit.DriverIs("hdb") {
+		assert.Equal(t, `select * from "table_test_where" where 1 = 1 or "deleted_at" is null`, sql, "the query sql not equal")
 	} else {
 		assert.Equal(t, "select * from `table_test_where` where true or `deleted_at` is null", sql, "the query sql not equal")
 	}

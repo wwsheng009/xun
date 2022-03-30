@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"database/sql"
 	"fmt"
 	"reflect"
 
@@ -202,4 +203,27 @@ func CopySlice(values []interface{}) []interface{} {
 		new = append(new, v)
 	}
 	return new
+}
+
+func StmtExec(stmt *sql.Stmt, bindings []interface{}) (sql.Result, error) {
+
+	var err error
+	var res sql.Result
+	if len(bindings) > 0 {
+		// var dummy1 []interface{}
+		if _, ok := bindings[0].([]interface{}); ok {
+			// if reflect.TypeOf(bindings[0]) == reflect.TypeOf(dummy1) {
+			for _, row := range bindings {
+				res, err = stmt.Exec(row.([]interface{})...)
+				if err != nil {
+					return res, err
+				}
+			}
+		} else {
+			res, err = stmt.Exec(bindings...)
+		}
+	} else {
+		res, err = stmt.Exec(bindings...)
+	}
+	return res, err
 }

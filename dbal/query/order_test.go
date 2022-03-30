@@ -45,6 +45,11 @@ func TestOrderOrderByRaw(t *testing.T) {
 			Where("email", "like", "%@yao.run").
 			Select("id", "name", "email", "vote", "score", "status").
 			OrderByRaw(`"vote" desc, "score" asc`)
+	} else if unit.DriverIs("hdb") {
+		qb.Table("table_test_order").
+			Where("email", "like", "%@yao.run").
+			Select("id", "name", "email", "vote", "score", "status").
+			OrderByRaw(`"vote" desc, "score" asc`)
 	} else {
 		qb.Table("table_test_order").
 			Where("email", "like", "%@yao.run").
@@ -82,6 +87,17 @@ func TestOrderOrderByRawUnion(t *testing.T) {
 	NewTableForOrderTest()
 	qb := getTestBuilder()
 	if unit.DriverIs("postgres") {
+		qb.Table("table_test_order").
+			Where("email", "like", "%@yao.run").
+			Select("id", "name", "email", "vote", "score", "status").
+			Where("vote", 5).
+			Union(func(qb Query) {
+				qb.Table("table_test_order").
+					Select("id", "name", "email", "vote", "score", "status").
+					Where("vote", 6)
+			}).
+			OrderByRaw(`"vote" desc, "score" asc`)
+	} else if unit.DriverIs("hdb") {
 		qb.Table("table_test_order").
 			Where("email", "like", "%@yao.run").
 			Select("id", "name", "email", "vote", "score", "status").

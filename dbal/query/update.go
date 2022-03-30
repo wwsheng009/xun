@@ -2,6 +2,7 @@ package query
 
 import (
 	"fmt"
+	"reflect"
 
 	"github.com/yaoapp/kun/log"
 	"github.com/yaoapp/xun"
@@ -88,12 +89,33 @@ func (builder *Builder) Upsert(v interface{}, uniqueBy interface{}, update inter
 	}
 	defer stmt.Close()
 
-	res, err := stmt.Exec(bindings...)
+	// res, err := stmt.Exec(bindings...)
+	// if err != nil {
+	// 	return 0, err
+	// }
+	var res int64 = 0
+
+	if len(bindings) > 0 {
+		var dummy1 []interface{}
+		if reflect.TypeOf(bindings[0]) == reflect.TypeOf(dummy1) {
+			for _, row := range bindings {
+				sqlres, err := stmt.Exec(row.([]interface{})...)
+				if err != nil {
+					return 0, err
+				}
+				res2, _ := sqlres.RowsAffected()
+				res = res + res2
+			}
+			return res, nil
+		}
+	}
+	sqlres, err := stmt.Exec(bindings...)
 	if err != nil {
 		return 0, err
 	}
+	res2, _ := sqlres.RowsAffected()
 
-	return res.RowsAffected()
+	return res2, err
 }
 
 // MustUpsert new records or update the existing ones.

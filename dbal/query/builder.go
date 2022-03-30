@@ -9,6 +9,7 @@ import (
 	_ "github.com/yaoapp/xun/grammar/mysql"    // Load the MySQL Grammar
 	_ "github.com/yaoapp/xun/grammar/postgres" // Load the Postgres Grammar
 	_ "github.com/yaoapp/xun/grammar/sqlite3"  // Load the SQLite3 Grammar
+	_ "github.com/yaoapp/xun/grammar/saphdb"
 )
 
 // New create a new schema interface using the given driver and DSN

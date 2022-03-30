@@ -87,14 +87,22 @@ func TestInsertMustInsertRaw(t *testing.T) {
 	NewTableForInsertTest()
 	qb := getTestBuilder()
 	raw := "random()"
-	if unit.DriverIs("mysql") {
+	if unit.DriverIs("mysql") || unit.DriverIs("hdb") {
 		raw = "rand()"
 	}
+	if unit.Is("hdb") {
+		qb.Table("table_test_insert").MustInsert([][]interface{}{
+			{"picard@example.com", 3},
+			{"janeway@example.com", 2},
+		}, []string{"email", "vote"})
 
-	qb.Table("table_test_insert").MustInsert([][]interface{}{
-		{"picard@example.com", dbal.Raw(raw)},
-		{"janeway@example.com", 2},
-	}, []string{"email", "vote"})
+	} else {
+		qb.Table("table_test_insert").MustInsert([][]interface{}{
+			{"picard@example.com", dbal.Raw(raw)},
+			{"janeway@example.com", 2},
+		}, []string{"email", "vote"})
+
+	}
 
 	users := qb.Select("id", "email", "vote").OrderBy("id").MustGet()
 
@@ -218,7 +226,7 @@ func TestInsertMustInsertGetID(t *testing.T) {
 		{Email: "Gee@example.com", Vote: 10},
 	})
 
-	if unit.DriverIs("sqlite3") {
+	if unit.DriverIs("sqlite3") || unit.DriverIs("hdb") {
 		assert.Equal(t, int64(5), id, "The return last id should be 5")
 	} else {
 		assert.Equal(t, int64(4), id, "The return last id should be 4")
@@ -243,7 +251,7 @@ func TestInsertMustInsertGetIdWithColumns(t *testing.T) {
 		{"janeway@example.com", 2},
 	}, "id", "email,vote")
 
-	if unit.DriverIs("sqlite3") {
+	if unit.DriverIs("sqlite3") || unit.DriverIs("hdb") {
 		assert.Equal(t, int64(2), id, "The return last id should be 2")
 	} else {
 		assert.Equal(t, int64(1), id, "The return last id should be 1")
@@ -259,6 +267,8 @@ func TestInsertMustInsertUsing(t *testing.T) {
 	var sql string
 	if unit.DriverIs("postgres") {
 		sql = "$1 as email, $2 as vote"
+	} else if unit.DriverIs("hdb") {
+		sql = `? as "email", ? as "vote"`
 	} else {
 		sql = "? as email, ? as vote"
 	}

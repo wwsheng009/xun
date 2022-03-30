@@ -12,7 +12,8 @@ import (
 
 	_ "github.com/yaoapp/xun/grammar/mysql"    // Load the MySQL Grammar
 	_ "github.com/yaoapp/xun/grammar/postgres" // Load the Postgres Grammar
-	_ "github.com/yaoapp/xun/grammar/sqlite3"  // Load the SQLite3 Grammar
+	_ "github.com/yaoapp/xun/grammar/saphdb"
+	_ "github.com/yaoapp/xun/grammar/sqlite3" // Load the SQLite3 Grammar
 )
 
 var testBuilder Schema
@@ -150,11 +151,20 @@ func TestBuilderGetConnection(t *testing.T) {
 	conn, err := builder.GetConnection()
 	assert.Equal(t, nil, err, "the return error should be nil")
 	value := ""
-	err = conn.DB.Get(&value, "SELECT 'hello' ")
-	assert.Equal(t, nil, err, "the return error should be nil")
-	if err == nil {
-		assert.Equal(t, "hello", value, "the return value should be hello")
+	if unit.DriverIs("hdb") {
+		err = conn.DB.Get(&value, "SELECT 'hello' from dummy ")
+		assert.Equal(t, nil, err, "the return error should be nil")
+		if err == nil {
+			assert.Equal(t, "hello", value, "the return value should be hello")
+		}
+	} else {
+		err = conn.DB.Get(&value, "SELECT 'hello' ")
+		assert.Equal(t, nil, err, "the return error should be nil")
+		if err == nil {
+			assert.Equal(t, "hello", value, "the return value should be hello")
+		}
 	}
+
 	assert.Equal(t, unit.Driver(), conn.Config.Driver, "the connection driver should be %s", unit.Driver())
 }
 
@@ -164,7 +174,11 @@ func TestBuilderGetDB(t *testing.T) {
 	db, err := builder.GetDB()
 	assert.Equal(t, nil, err, "the return error should be nil")
 	value := ""
-	err = db.Get(&value, "SELECT 'hello' ")
+	sql := "SELECT 'hello' "
+	if unit.Is("hdb") {
+		sql = "SELECT 'hello' from dummy"
+	}
+	err = db.Get(&value, sql)
 	assert.Equal(t, nil, err, "the return error should be nil")
 	if err == nil {
 		assert.Equal(t, "hello", value, "the return value should be hello")
@@ -338,7 +352,11 @@ func TestBuilderMustGetConnection(t *testing.T) {
 	builder := getTestBuilder()
 	conn := builder.MustGetConnection()
 	value := ""
-	err := conn.DB.Get(&value, "SELECT 'hello' ")
+	sql := "SELECT 'hello' "
+	if unit.Is("hdb") {
+		sql = "SELECT 'hello' from dummy"
+	}
+	err := conn.DB.Get(&value, sql)
 	assert.Equal(t, nil, err, "the return error should be nil")
 	if err == nil {
 		assert.Equal(t, "hello", value, "the return value should be hello")
@@ -357,7 +375,11 @@ func TestBuilderMustGetDB(t *testing.T) {
 	builder := getTestBuilder()
 	db := builder.MustGetDB()
 	value := ""
-	err := db.Get(&value, "SELECT 'hello' ")
+	sql := "SELECT 'hello' "
+	if unit.Is("hdb") {
+		sql = "SELECT 'hello' from dummy"
+	}
+	err := db.Get(&value, sql)
 	assert.Equal(t, nil, err, "the return error should be nil")
 	if err == nil {
 		assert.Equal(t, "hello", value, "the return value should be hello")
@@ -541,8 +563,12 @@ func TestBuilderDB(t *testing.T) {
 	defer unit.Catch()
 	builder := getTestBuilder()
 	db := builder.DB()
+	sql := "SELECT 'hello' "
+	if unit.Is("hdb") {
+		sql = "SELECT 'hello' from dummy"
+	}
 	value := ""
-	err := db.Get(&value, "SELECT 'hello' ")
+	err := db.Get(&value, sql)
 	assert.Equal(t, nil, err, "the return error should be nil")
 	if err == nil {
 		assert.Equal(t, "hello", value, "the return value should be hello")
@@ -637,7 +663,7 @@ func checkTableAlterTable(t *testing.T, table Blueprint) {
 		assert.Equal(t, false, table.GetColumn("latest").IsUnsigned, "the latest IsUnsigned should be false")
 	}
 
-	if unit.Is("postgres") {
+	if unit.Is("postgres") || unit.Is("hdb") {
 		assert.Nil(t, nameLatest, "the index name_latest should has none")
 		assert.Nil(t, nameCounter, "the index name_counter should has none")
 	} else if unit.Not("sqlite3") {
