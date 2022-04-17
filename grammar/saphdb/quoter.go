@@ -49,7 +49,9 @@ func (quoter Quoter) VAL(v interface{}) string {
 func (quoter *Quoter) Wrap(value interface{}) string {
 	switch value.(type) {
 	case dbal.Expression:
-		return value.(dbal.Expression).GetValue()
+		val := value.(dbal.Expression).GetValue()
+		val = strings.ReplaceAll(val, "`", "\"")
+		return val
 	case dbal.Name:
 		col := value.(dbal.Name)
 		if col.As() != "" {

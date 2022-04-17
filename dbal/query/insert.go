@@ -72,8 +72,6 @@ func (builder *Builder) InsertGetID(v interface{}, args ...interface{}) (int64, 
 
 	columns, values := builder.prepareInsertValues(v, columns...)
 	sql, bindings := builder.Grammar.CompileInsertGetID(builder.Query, columns, values, seq)
-	fmt.Println(sql)
-	fmt.Println(bindings)
 	defer log.With(log.F{"bindings": bindings}).Debug(sql)
 	return builder.Grammar.ProcessInsertGetID(sql, bindings, seq)
 }

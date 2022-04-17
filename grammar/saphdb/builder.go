@@ -64,6 +64,11 @@ func (grammarSQL Hdb) SQLAddColumn(column *dbal.Column) string {
 		typ = "NVARCHAR"
 	}
 
+	if typ == "FLOAT" {
+		if column.Precision != nil {
+			typ = fmt.Sprintf("%s(%d)", typ, utils.IntVal(column.Precision))
+		}
+	}
 	decimalTypes := []string{"DECIMAL"}
 
 	if column.Precision != nil && column.Scale != nil && utils.StringHave(decimalTypes, typ) {
@@ -105,7 +110,7 @@ func (grammarSQL Hdb) SQLAddColumn(column *dbal.Column) string {
 	// JSON type
 	if typ == "JSON" || typ == "JSONB" {
 
-		typ = "NVARCHAR(5000)"
+		typ = "TEXT"
 	} else if typ == "UUID" { // UUID
 		// comment = fmt.Sprintf("COMMENT %s", quoter.VAL(fmt.Sprintf("T:%s|%s", column.Type, utils.StringVal(column.Comment))))
 		typ = "NVARCHAR(36)"
