@@ -97,6 +97,19 @@ func (quoter *Quoter) WrapTable(value interface{}) string {
 		return value.(dbal.Expression).GetValue()
 	case dbal.Name:
 		col := value.(dbal.Name)
+
+		//优化读取别的schema的数据
+		if strings.Contains(col.Name, ".") {
+			arrs := strings.Split(col.Name, ".")
+			table := arrs[0]
+			name := quoter.WrapAliasedValue(arrs[1])
+
+			if col.As() != "" {
+				return fmt.Sprintf(`%s.%s%s as %s`, quoter.ID(table), col.Prefix, name, quoter.ID(col.As()))
+			}
+			return fmt.Sprintf(`%s.%s%s`, quoter.ID(table), col.Prefix, name)
+		}
+
 		if col.As() != "" {
 			return fmt.Sprintf(`%s as %s`, quoter.ID(col.Fullname()), quoter.ID(col.As()))
 		}
