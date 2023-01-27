@@ -26,16 +26,13 @@ func (quoter Quoter) ID(name string) string {
 // VAL quoting query value ( 'value' )
 func (quoter Quoter) VAL(v interface{}) string {
 	input := ""
-	switch v.(type) {
+	switch v2 := v.(type) {
 	case *string:
-		input = fmt.Sprintf("%s", utils.StringVal(v.(*string)))
-		break
+		input = utils.StringVal(v2)
 	case string:
 		input = fmt.Sprintf("%s", v)
-		break
 	case int, int16, int32, int64, float64, float32:
 		input = fmt.Sprintf("%d", v)
-		break
 	default:
 		input = fmt.Sprintf("%v", v)
 	}
@@ -47,19 +44,19 @@ func (quoter Quoter) VAL(v interface{}) string {
 
 // Wrap a value in keyword identifiers.
 func (quoter *Quoter) Wrap(value interface{}) string {
-	switch value.(type) {
+	switch v2 := value.(type) {
 	case dbal.Expression:
-		val := value.(dbal.Expression).GetValue()
+		val := v2.GetValue()
 		val = strings.ReplaceAll(val, "`", "\"")
 		return val
 	case dbal.Name:
-		col := value.(dbal.Name)
+		col := v2
 		if col.As() != "" {
 			return fmt.Sprintf(`%s as "%s"`, quoter.ID(col.Name), col.As())
 		}
-		return quoter.ID(value.(dbal.Name).Name)
+		return quoter.ID(v2.Name)
 	case dbal.Select:
-		col := value.(dbal.Select)
+		col := v2
 		if col.Alias != "" {
 			return fmt.Sprintf(`%s as %s`, col.SQL, quoter.ID(col.Alias))
 		}
@@ -76,6 +73,10 @@ func (quoter *Quoter) WrapAliasedValue(value string) string {
 	if value == "*" {
 		return "*"
 	}
+
+	if value == "`*`" {
+		return "*"
+	}
 	if strings.Contains(value, ".") {
 		arrs := strings.Split(value, ".")
 		table := arrs[0]
@@ -87,16 +88,16 @@ func (quoter *Quoter) WrapAliasedValue(value string) string {
 	if name.As() != "" {
 		return fmt.Sprintf(`%s as %s`, quoter.ID(name.Fullname()), quoter.ID(name.As()))
 	}
-	return fmt.Sprintf(`%s`, quoter.ID(name.Fullname()))
+	return quoter.ID(name.Fullname())
 }
 
 // WrapTable Wrap a table in keyword identifiers.
 func (quoter *Quoter) WrapTable(value interface{}) string {
-	switch value.(type) {
+	switch d := value.(type) {
 	case dbal.Expression:
-		return value.(dbal.Expression).GetValue()
+		return d.GetValue()
 	case dbal.Name:
-		col := value.(dbal.Name)
+		col := d
 
 		//优化读取别的schema的数据
 		if strings.Contains(col.Name, ".") {
@@ -113,11 +114,11 @@ func (quoter *Quoter) WrapTable(value interface{}) string {
 		if col.As() != "" {
 			return fmt.Sprintf(`%s as %s`, quoter.ID(col.Fullname()), quoter.ID(col.As()))
 		}
-		return quoter.ID(value.(dbal.Name).Fullname())
+		return quoter.ID(d.Fullname())
 	case dbal.From:
-		return quoter.WrapTable(value.(dbal.From).Name)
+		return quoter.WrapTable(d.Name)
 	case string:
-		return quoter.ID(dbal.NewName(value.(string)).Fullname())
+		return quoter.ID(dbal.NewName(d).Fullname())
 	default:
 		return fmt.Sprintf(`"%v"`, value)
 	}

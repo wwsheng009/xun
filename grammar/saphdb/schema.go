@@ -81,10 +81,18 @@ func (grammarSQL Hdb) GetTables() ([]string, error) {
 
 // TableExists check if the table exists
 func (grammarSQL Hdb) TableExists(name string) (bool, error) {
+	table_name := name
+	schema_name := grammarSQL.GetSchema()
+
+	if strings.Contains(name, ".") { //只要有权限，可以获取别的schema的表
+		arrs := strings.Split(name, ".")
+		schema_name = arrs[0]
+		table_name = arrs[1]
+	}
 	sql := fmt.Sprintf(
 		"SELECT table_name AS name FROM public.tables WHERE schema_name=%s AND table_name = %s",
-		grammarSQL.VAL(grammarSQL.GetSchema()),
-		grammarSQL.VAL(name),
+		grammarSQL.VAL(schema_name),
+		grammarSQL.VAL(table_name),
 	)
 	defer log.Debug(sql)
 	rows := []string{}
@@ -95,7 +103,7 @@ func (grammarSQL Hdb) TableExists(name string) (bool, error) {
 	if len(rows) == 0 {
 		return false, nil
 	}
-	return name == fmt.Sprintf("%s", rows[0]), nil
+	return table_name == rows[0], nil
 }
 
 // CreateType create user defined type
@@ -284,13 +292,20 @@ func (grammarSQL Hdb) GetTable(name string) (*dbal.Table, error) {
 	if !has {
 		return nil, fmt.Errorf("the table %s does not exists", name)
 	}
+	schema_name := grammarSQL.GetSchema()
+	table_name := name
+	if strings.Contains(name, ".") { //只要有权限，可以获取别的schema的表
+		arrs := strings.Split(name, ".")
+		schema_name = arrs[0]
+		table_name = arrs[1]
+	}
 
-	table := dbal.NewTable(name, grammarSQL.GetSchema(), grammarSQL.GetDatabase())
-	columns, err := grammarSQL.GetColumnListing(table.SchemaName, table.TableName)
+	table := dbal.NewTable(table_name, schema_name, grammarSQL.GetDatabase())
+	columns, err := grammarSQL.GetColumnListing(schema_name, table.TableName)
 	if err != nil {
 		return nil, err
 	}
-	indexes, err := grammarSQL.GetIndexListing(table.SchemaName, table.TableName)
+	indexes, err := grammarSQL.GetIndexListing(schema_name, table.TableName)
 	if err != nil {
 		return nil, err
 	}
@@ -363,31 +378,31 @@ func (grammarSQL Hdb) AlterTable(table *dbal.Table) error {
 		switch command.Name {
 		case "AddColumn":
 			grammarSQL.alterTableAddColumn(table, command, sql, &stmts, &errs)
-			break
+
 		case "ChangeColumn":
 			grammarSQL.alterTableChangeColumn(table, command, sql, &stmts, &errs)
-			break
+
 		case "RenameColumn":
 			grammarSQL.alterTableRenameColumn(table, command, sql, &stmts, &errs)
-			break
+
 		case "DropColumn":
 			grammarSQL.alterTableDropColumn(table, command, sql, &stmts, &errs)
-			break
+
 		case "CreateIndex":
 			grammarSQL.alterTableCreateIndex(table, command, sql, &stmts, &errs)
-			break
+
 		case "RenameIndex":
 			grammarSQL.alterTableRenameIndex(table, command, sql, &stmts, &errs)
-			break
+
 		case "DropIndex":
 			grammarSQL.alterTableDropIndex(table, command, sql, &stmts, &errs)
-			break
+
 		case "CreatePrimary":
 			grammarSQL.alterTableCreatePrimary(table, command, sql, &stmts, &errs)
-			break
+
 		case "DropPrimary":
 			grammarSQL.alterTableDropPrimary(table, command, sql, &stmts, &errs)
-			break
+
 		}
 	}
 
@@ -720,7 +735,6 @@ func (grammarSQL Hdb) GetIndexListing(dbName string, tableName string) ([]*dbal.
 // GetColumnListing get a table columns structure
 func (grammarSQL Hdb) GetColumnListing(dbName string, tableName string) ([]*dbal.Column, error) {
 	selectColumns := []string{
-
 		"SCHEMA_NAME AS \"db_name\"",
 		"TABLE_NAME AS \"table_name\"",
 		"COLUMN_NAME AS \"name\"",
@@ -752,7 +766,8 @@ func (grammarSQL Hdb) GetColumnListing(dbName string, tableName string) ([]*dbal
 	sql := fmt.Sprintf(`
 			SELECT %s
 			FROM TABLE_COLUMNS
-			WHERE  SCHEMA_NAME = %s AND TABLE_NAME = %s;
+			WHERE  SCHEMA_NAME = %s AND TABLE_NAME = %s
+			ORDER BY POSITION;
 		`,
 		strings.Join(selectColumns, ","),
 		grammarSQL.VAL(dbName),
@@ -776,6 +791,13 @@ func (grammarSQL Hdb) GetColumnListing(dbName string, tableName string) ([]*dbal
 			typ = grammarSQL.GetTypeFromComment(column.Comment)
 			if typ != "" {
 				column.Type = typ
+			}
+		}
+		//转换默认值
+		switch column.Default.(type) {
+		case []uint8:
+			{
+				column.Default = string(column.Default.([]uint8))
 			}
 		}
 

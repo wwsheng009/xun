@@ -69,10 +69,17 @@ func NewName(fullname string, prefix ...string) Name {
 	if len(prefix) > 0 {
 		name.Prefix = prefix[0]
 	}
-	namer := strings.Split(strings.ToLower(fullname), " as ")
-	if len(namer) == 2 {
-		name.Name = strings.Trim(namer[0], " ")
-		name.Alias = strings.Trim(namer[1], " ")
+	// namer := strings.Split(strings.ToLower(fullname), " as ")
+	// if len(namer) == 2 {
+	// 	name.Name = strings.Trim(namer[0], " ")
+	// 	name.Alias = strings.Trim(namer[1], " ")
+	// 	return name
+	// }
+	//避免把字段转换成小写
+	idx := strings.Index(strings.ToLower(fullname), " as ")
+	if idx > 0 {
+		name.Name = strings.Trim(fullname[0:idx], " ")
+		name.Alias = strings.Trim(fullname[idx+4:], " ")
 		return name
 	}
 	name.Name = strings.Trim(fullname, " ")
