@@ -366,10 +366,12 @@ func (grammarSQL SQL) CreateTable(table *dbal.Table) error {
 	charset := utils.GetIF(table.Charset != "", "DEFAULT CHARSET "+table.Charset, "")
 	collation := utils.GetIF(table.Collation != "", "COLLATE="+table.Collation, "")
 
+	comment := utils.GetIF(table.Comment != "", "COMMENT="+table.Collation, "")
+
 	sql = sql + strings.Join(stmts, ",\n")
 	sql = sql + fmt.Sprintf(
-		"\n) %s %s %s ROW_FORMAT=DYNAMIC",
-		engine, charset, collation,
+		"\n) %s %s %s %s ROW_FORMAT=DYNAMIC",
+		engine, charset, comment, collation,
 	)
 	defer log.Debug(sql)
 	_, err := grammarSQL.DB.Exec(sql)
