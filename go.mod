@@ -3,7 +3,7 @@ module github.com/yaoapp/xun
 go 1.18
 
 require (
-	github.com/SAP/go-hdb v0.105.8
+	github.com/SAP/go-hdb v1.2.1
 	github.com/TylerBrock/colorjson v0.0.0-20200706003622-8a50f05110d2
 	github.com/blang/semver/v4 v4.0.0
 	github.com/fatih/color v1.13.0
@@ -24,8 +24,9 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/sirupsen/logrus v1.8.1 // indirect
-	golang.org/x/sys v0.6.0 // indirect
+	golang.org/x/crypto v0.8.0 // indirect
+	golang.org/x/exp v0.0.0-20230321023759-10a507213a29 // indirect
+	golang.org/x/sys v0.7.0 // indirect
+	golang.org/x/text v0.9.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0 // indirect
 )
-
-replace github.com/SAP/go-hdb => ../go-hdb // gou local
