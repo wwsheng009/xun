@@ -16,7 +16,8 @@ type Quoter struct {
 
 // ID quoting query Identifier (`id`)
 func (quoter Quoter) ID(name string) string {
-	name = strings.ReplaceAll(name, "\"", "")
+	name = strings.ReplaceAll(name, "`", "")
+	// name = strings.ReplaceAll(name, "\"", "")
 	name = strings.ReplaceAll(name, "\n", "")
 	name = strings.ReplaceAll(name, "\r", "")
 	return "\"" + name + "\""
@@ -46,9 +47,11 @@ func (quoter Quoter) VAL(v interface{}) string {
 
 // Wrap a value in keyword identifiers.
 func (quoter *Quoter) Wrap(value interface{}) string {
-	switch value.(type) {
+	switch v2 := value.(type) {
 	case dbal.Expression:
-		return value.(dbal.Expression).GetValue()
+		val := v2.GetValue()
+		val = strings.ReplaceAll(val, "`", "\"")
+		return val
 	case dbal.Name:
 		col := value.(dbal.Name)
 		if col.As() != "" {
@@ -118,8 +121,12 @@ func (quoter *Quoter) Parameter(value interface{}, num int) string {
 // Parameterize Create query parameter place-holders for an array.
 func (quoter *Quoter) Parameterize(values []interface{}, offset int) string {
 	params := []string{}
-	for idx, value := range values {
-		params = append(params, quoter.Parameter(value, idx+1+offset))
+	index := 1
+	for _, value := range values {
+		params = append(params, quoter.Parameter(value, index+offset))
+		if !quoter.IsExpression(value) {
+			index += 1
+		}
 	}
 	return strings.Join(params, ",")
 }

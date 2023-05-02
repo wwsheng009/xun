@@ -782,6 +782,20 @@ func (grammarSQL Postgres) GetColumnListing(dbName string, tableName string) ([]
 					enumOptions[column.TypeName] = strings.Split(optionStr, ",")
 				}
 				column.Option = enumOptions[column.TypeName]
+
+				switch column.Default.(type) {
+				case string:
+					s := fmt.Sprintf("%s", column.Default)
+					if strings.Contains(s, "::enum") {
+						column.Default = strings.Split(s, "::")[0]
+					}
+				case []byte:
+					s := fmt.Sprintf("%s", column.Default)
+					if strings.Contains(s, "::enum") {
+						column.Default = strings.Split(s, "::")[0]
+					}
+				}
+
 			}
 		}
 
