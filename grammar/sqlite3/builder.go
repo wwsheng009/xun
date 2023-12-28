@@ -54,9 +54,9 @@ func (grammarSQL SQLite3) SQLAddColumn(column *dbal.Column) string {
 	// unsigned := utils.GetIF(column.IsUnsigned && column.Type == "BIGINT", "UNSIGNED", "").(string)
 	primaryKey := utils.GetIF(column.Primary, "PRIMARY KEY", "").(string)
 	nullable := utils.GetIF(column.Nullable, "NULL", "NOT NULL").(string)
-	if defaultValue == "" && nullable == "NOT NULL" {
-		nullable = "NULL"
-	}
+	// if defaultValue == "" && nullable == "NOT NULL" {
+	// 	nullable = "NULL"
+	// }
 
 	if primaryKey != "" {
 		nullable = primaryKey
