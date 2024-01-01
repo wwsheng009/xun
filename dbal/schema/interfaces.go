@@ -152,6 +152,9 @@ type Blueprint interface {
 	DropSoftDeletes()
 	DropSoftDeletesTz()
 
+	// pgvector
+	Vector(name string, args ...int) *Column
+
 	//@todo: morphs, nullableMorphs, uuidMorphs nullableUuidMorphs
 
 }

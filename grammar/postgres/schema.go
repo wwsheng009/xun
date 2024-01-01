@@ -761,9 +761,9 @@ func (grammarSQL Postgres) GetColumnListing(dbName string, tableName string) ([]
 			typ = grammarSQL.GetTypeFromComment(column.Comment)
 			if typ != "" {
 				column.Type = typ
+				*column.Comment = strings.ReplaceAll(*column.Comment, fmt.Sprintf("T:%s|", typ), "")
 			}
 		}
-
 		// user defined types
 		if column.Type == "USER-DEFINED" {
 

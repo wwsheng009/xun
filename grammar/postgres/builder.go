@@ -78,7 +78,7 @@ func (grammarSQL Postgres) SQLAddComment(column *dbal.Column) string {
 			grammarSQL.VAL(column.Comment),
 		), "").(string)
 
-	mappingTypes := []string{"ipAddress", "year"}
+	mappingTypes := []string{"ipAddress", "year", "vector"}
 	if utils.StringHave(mappingTypes, column.Type) {
 		comment = fmt.Sprintf("COMMENT on column %s.%s is %s;",
 			grammarSQL.ID(column.TableName),
@@ -102,10 +102,13 @@ func (grammarSQL Postgres) SQLAddIndex(index *dbal.Index) string {
 	// IS JSON
 	columns := []string{}
 	isJSON := false
+	isVector := false
 	for _, column := range index.Columns {
 		columns = append(columns, quoter.ID(column.Name))
 		if column.Type == "json" || column.Type == "jsonb" {
 			isJSON = true
+		} else if column.Type == "vector" {
+			isVector = true
 		}
 	}
 	if isJSON {
@@ -122,6 +125,10 @@ func (grammarSQL Postgres) SQLAddIndex(index *dbal.Index) string {
 		sql = fmt.Sprintf(
 			"%s (%s) %s",
 			typ, strings.Join(columns, ","), comment)
+	} else if isVector {
+		sql = fmt.Sprintf(
+			"CREATE INDEX %s ON %s USING hnsw (%s vector_cosine_ops) WITH (m = 24, ef_construction = 200)",
+			name, quoter.ID(index.TableName), strings.Join(columns, ","))
 	} else {
 		sql = fmt.Sprintf(
 			"CREATE %s %s ON %s (%s)",

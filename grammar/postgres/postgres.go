@@ -117,6 +117,7 @@ func New() dbal.Grammar {
 	types["timestampTz"] = "TIMESTAMP(%d) WITH TIME ZONE"
 	types["binary"] = "BYTEA"
 	types["macAddress"] = "MACADDR"
+	types["vector"] = "VECTOR" //pgvector
 	pg.Types = types
 
 	// set fliptypes
@@ -129,6 +130,7 @@ func New() dbal.Grammar {
 		pg.FlipTypes["TIME WITHOUT TIME ZONE"] = "time"
 		pg.FlipTypes["TIME WITH TIME ZONE"] = "timeTz"
 		pg.FlipTypes["SMALLINT"] = "smallInteger"
+		pg.FlipTypes["VECTOR"] = "vector"
 	}
 
 	return pg
