@@ -19,7 +19,7 @@ func (table *Table) String(name string, args ...int) *Column {
 // Char Create a new char column on the table.
 func (table *Table) Char(name string, args ...int) *Column {
 	column := table.newColumn(name).SetType("char")
-	column.MaxLength = 30
+	column.MaxLength = 255
 	column.DefaultLength = 10
 	length := column.DefaultLength
 	if len(args) >= 1 {
