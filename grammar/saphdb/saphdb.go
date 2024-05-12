@@ -91,6 +91,7 @@ func New() dbal.Grammar {
 	types["char"] = "VARCHAR"
 	types["mediumText"] = "TEXT"
 	types["longText"] = "TEXT"
+	types["text"] = "TEXT"
 	types["dateTime"] = "SECONDDATE"
 	types["dateTimeTz"] = "TIMESTAMP"
 	types["enum"] = "ENUM"

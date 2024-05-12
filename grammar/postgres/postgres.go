@@ -109,6 +109,7 @@ func New() dbal.Grammar {
 	types["char"] = "CHARACTER"
 	types["mediumText"] = "TEXT"
 	types["longText"] = "TEXT"
+	types["text"] = "TEXT"
 	types["dateTime"] = "TIMESTAMP(%d) WITHOUT TIME ZONE"
 	types["dateTimeTz"] = "TIMESTAMP(%d) WITH TIME ZONE"
 	types["time"] = "TIME(%d) WITHOUT TIME ZONE"
