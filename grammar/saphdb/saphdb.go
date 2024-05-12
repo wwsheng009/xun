@@ -70,9 +70,10 @@ func (grammarSQL Hdb) NewWithRead(write *sqlx.DB, writeConfig *dbal.Config, read
 	return grammarSQL, nil
 }
 
-func New() dbal.Grammar {
+func New(opts ...sql.Option) dbal.Grammar {
+// func New() dbal.Grammar {
 	hdb := Hdb{
-		SQL: sql.NewSQL(&Quoter{}),
+		SQL: sql.NewSQL(&Quoter{}, opts...),
 	}
 	hdb.Driver = "hdb"
 	hdb.IndexTypes = map[string]string{

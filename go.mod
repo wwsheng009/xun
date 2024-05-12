@@ -1,9 +1,11 @@
 module github.com/yaoapp/xun
 
-go 1.18
+go 1.21.0
+
+toolchain go1.21.6
 
 require (
-	github.com/SAP/go-hdb v1.5.8
+	github.com/SAP/go-hdb v1.8.25
 	github.com/TylerBrock/colorjson v0.0.0-20200706003622-8a50f05110d2
 	github.com/blang/semver/v4 v4.0.0
 	github.com/fatih/color v1.13.0
@@ -12,6 +14,7 @@ require (
 	github.com/json-iterator/go v1.1.12
 	github.com/lib/pq v1.9.0
 	github.com/mattn/go-sqlite3 v1.14.6
+	github.com/qustavo/sqlhooks/v2 v2.1.0
 	github.com/stretchr/testify v1.7.1
 	github.com/yaoapp/kun v0.9.0
 )
@@ -23,11 +26,9 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/qustavo/sqlhooks/v2 v2.1.0 // indirect
 	github.com/sirupsen/logrus v1.8.1 // indirect
-	golang.org/x/crypto v0.14.0 // indirect
-	golang.org/x/exp v0.0.0-20231006140011-7918f672742d // indirect
-	golang.org/x/sys v0.13.0 // indirect
-	golang.org/x/text v0.13.0 // indirect
+	golang.org/x/crypto v0.23.0 // indirect
+	golang.org/x/sys v0.20.0 // indirect
+	golang.org/x/text v0.15.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0 // indirect
 )

@@ -12,8 +12,10 @@ import (
 	"github.com/mattn/go-sqlite3"
 	"github.com/qustavo/sqlhooks/v2"
 	"github.com/yaoapp/xun/dbal"
+
 	gmysql "github.com/yaoapp/xun/grammar/mysql"
 	gpostgres "github.com/yaoapp/xun/grammar/postgres"
+	gsaphdb "github.com/yaoapp/xun/grammar/saphdb"
 	gsql "github.com/yaoapp/xun/grammar/sql"
 	gsqlite3 "github.com/yaoapp/xun/grammar/sqlite3"
 )
@@ -124,6 +126,8 @@ func (d *Driver) driver() driver.Driver {
 		return &pq.Driver{}
 	case "sqlite3":
 		return &sqlite3.SQLiteDriver{}
+	case "hdb":
+		return nil//not support
 	}
 	return nil
 }
@@ -136,6 +140,8 @@ func (d *Driver) grammar() dbal.Grammar {
 		return gpostgres.New(gsql.WithDriver(d.name))
 	case "sqlite3":
 		return gsqlite3.New(gsql.WithDriver(d.name))
+	case "hdb":
+		return gsaphdb.New(gsql.WithDriver(d.name))
 	}
 	return nil
 }
