@@ -120,7 +120,9 @@ func New(opts ...sql.Option) dbal.Grammar {
 	types["timestampTz"] = "TIMESTAMP(%d) WITH TIME ZONE"
 	types["binary"] = "BYTEA"
 	types["macAddress"] = "MACADDR"
-	types["vector"] = "VECTOR" //pgvector
+	types["vector"] = "VECTOR" //pgvecto.rs
+	types["vecf16"] = "VECF16" //pgvecto.rs
+	types["halfvec"] = "HALFVEC" //pgvector
 	pg.Types = types
 
 	// set fliptypes
@@ -134,6 +136,8 @@ func New(opts ...sql.Option) dbal.Grammar {
 		pg.FlipTypes["TIME WITH TIME ZONE"] = "timeTz"
 		pg.FlipTypes["SMALLINT"] = "smallInteger"
 		pg.FlipTypes["VECTOR"] = "vector"
+		pg.FlipTypes["VECF16"] = "vecf16"
+		pg.FlipTypes["HALFVEC"] = "halfvec"
 	}
 
 	return pg

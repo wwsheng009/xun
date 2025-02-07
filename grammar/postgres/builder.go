@@ -102,14 +102,50 @@ func (grammarSQL Postgres) SQLAddIndex(index *dbal.Index) string {
 	// IS JSON
 	columns := []string{}
 	isJSON := false
-	isVector := false
+
+	sql := ""
+	name := quoter.ID(fmt.Sprintf("%s_%s", index.TableName, index.Name))
+
 	for _, column := range index.Columns {
 		columns = append(columns, quoter.ID(column.Name))
 		if column.Type == "json" || column.Type == "jsonb" {
 			isJSON = true
 		} else if column.Type == "vector" {
-			isVector = true
+			// use pgvector/pgvector cannot support 2000+ dim index for vector type
+			// if *column.Length > 2000 {
+			// 	sql += fmt.Sprintf(
+			// 		"CREATE INDEX ON %s USING hnsw ((binary_quantize(%s)::bit(%d)) bit_hamming_ops);\n",
+			// 		quoter.ID(index.TableName), quoter.ID(column.Name), *column.Length)
+			// } else {
+
+			// get all the index methods from pg for extension pgvecto.rs
+			// SELECT am.amname AS index_method,
+			// 	opc.opcname AS opclass_name,
+			// 	opc.opcintype::regtype AS indexed_type,
+			// 	opc.opcdefault AS is_default
+			// 	FROM pg_am am, pg_opclass opc
+			// 	WHERE opc.opcmethod = am.oid AND am.amname = 'vectors'
+			// 	ORDER BY index_method, opclass_name;
+
+			// use tensorchord/pgvecto.rs as extension
+			sql += fmt.Sprintf(
+				"CREATE INDEX %s ON %s USING vectors (%s vector_cos_ops) WITH (options='[indexing.hnsw]\nm = 16\nef_construction = 100');\n",
+				name, quoter.ID(index.TableName), quoter.ID(column.Name))
+			// }
+
+		} else if column.Type == "vecf16" {
+			// use tensorchord/pgvecto.rs as extension
+			sql += fmt.Sprintf(
+				"CREATE INDEX %s ON %s USING vectors (%s vecf16_cos_ops) WITH (options='[indexing.hnsw]\nm = 16\nef_construction = 100');\n",
+				name, quoter.ID(index.TableName), quoter.ID(column.Name))
+		} else if column.Type == "halfvec" {
+			sql += fmt.Sprintf(
+				"CREATE INDEX ON %s USING hnsw (%s halfvec_cosine_ops);\n",
+				quoter.ID(index.TableName), quoter.ID(column.Name))
 		}
+	}
+	if sql != "" {
+		return sql
 	}
 	if isJSON {
 		return ""
@@ -119,18 +155,13 @@ func (grammarSQL Postgres) SQLAddIndex(index *dbal.Index) string {
 	if index.Comment != nil {
 		comment = fmt.Sprintf("COMMENT %s", quoter.VAL(index.Comment))
 	}
-	name := quoter.ID(fmt.Sprintf("%s_%s", index.TableName, index.Name))
-	sql := ""
+
 	if typ == "PRIMARY KEY" {
-		sql = fmt.Sprintf(
+		sql += fmt.Sprintf(
 			"%s (%s) %s",
 			typ, strings.Join(columns, ","), comment)
-	} else if isVector {
-		sql = fmt.Sprintf(
-			"CREATE INDEX %s ON %s USING hnsw (%s vector_cosine_ops) WITH (m = 24, ef_construction = 200)",
-			name, quoter.ID(index.TableName), strings.Join(columns, ","))
 	} else {
-		sql = fmt.Sprintf(
+		sql += fmt.Sprintf(
 			"CREATE %s %s ON %s (%s)",
 			typ, name, quoter.ID(index.TableName), strings.Join(columns, ","))
 	}

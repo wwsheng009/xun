@@ -424,10 +424,10 @@ func (table *Table) DropSoftDeletesTz() {
 	table.DropSoftDeletes()
 }
 
-// pgvector
-func (table *Table) Vector(name string, args ...int) *Column {
-	column := table.newColumn(name).SetType("vector")
-	column.MaxLength = 16000 //max dimensions
+// pgvecto.rs
+func (table *Table) Vector(name string, colType string, args ...int) *Column {
+	column := table.newColumn(name).SetType(colType)
+	column.MaxLength = 65535 //max dimensions https://github.com/tensorchord/pgvecto.rs
 	column.DefaultLength = 1536
 	length := column.DefaultLength
 	if len(args) >= 1 {
