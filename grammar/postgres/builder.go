@@ -129,14 +129,14 @@ func (grammarSQL Postgres) SQLAddIndex(index *dbal.Index) string {
 
 			// use tensorchord/pgvecto.rs as extension
 			sql += fmt.Sprintf(
-				"CREATE INDEX %s ON %s USING vectors (%s vector_cos_ops) WITH (options='[indexing.hnsw]\nm = 16\nef_construction = 100');\n",
+				"CREATE INDEX %s ON %s USING vectors (%s vector_cos_ops) WITH (options='[indexing.hnsw]\nm = 16\nef_construction = 200');\n",
 				name, quoter.ID(index.TableName), quoter.ID(column.Name))
 			// }
 
 		} else if column.Type == "vecf16" {
 			// use tensorchord/pgvecto.rs as extension
 			sql += fmt.Sprintf(
-				"CREATE INDEX %s ON %s USING vectors (%s vecf16_cos_ops) WITH (options='[indexing.hnsw]\nm = 16\nef_construction = 100');\n",
+				"CREATE INDEX %s ON %s USING vectors (%s vecf16_cos_ops) WITH (options='[indexing.hnsw]\nm = 16\nef_construction = 200');\n",
 				name, quoter.ID(index.TableName), quoter.ID(column.Name))
 		} else if column.Type == "halfvec" {
 			sql += fmt.Sprintf(
