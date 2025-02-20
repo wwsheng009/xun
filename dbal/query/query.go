@@ -22,9 +22,10 @@ func (builder *Builder) Get(v ...interface{}) ([]xun.R, error) {
 	db := builder.DB()
 	stmt, err := db.Prepare(builder.ToSQL())
 	if err != nil {
-		defer log.With(log.F{"bindings": builder.GetBindings()}).Error(builder.ToSQL())
+		defer log.With(log.F{"bindings": builder.GetBindings()}).Error("builder get sql:%s",builder.ToSQL())
 		return nil, err
 	}
+	defer log.With(log.F{"bindings": builder.GetBindings()}).Trace("builder get sql:%s",builder.ToSQL())
 
 	defer stmt.Close()
 
