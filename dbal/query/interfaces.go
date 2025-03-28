@@ -1,6 +1,8 @@
 package query
 
 import (
+	"database/sql"
+
 	"github.com/jmoiron/sqlx"
 	"github.com/yaoapp/xun"
 )
@@ -13,6 +15,7 @@ type Query interface {
 	Clone() Query
 	Reset() Query
 	Builder() *Builder
+	Driver() (string, error)
 
 	// defined in the query.go file
 	Table(name string) Query
@@ -174,6 +177,10 @@ type Query interface {
 	MustDelete() int64
 	Truncate() error
 	MustTruncate()
+
+	// defined in the exec.go file
+	Exec(sql string, bindings ...interface{}) (sql.Result, error)
+	ExecWrite(sql string, bindings ...interface{}) (sql.Result, error)
 
 	// defined in the debug.go file
 	DD()
