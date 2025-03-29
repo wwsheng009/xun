@@ -128,9 +128,17 @@ func (grammarSQL Hdb) CreateType(table *dbal.Table, types map[string][]string) e
 }
 
 // CreateTable create a new table on the schema
-func (grammarSQL Hdb) CreateTable(table *dbal.Table) error {
+func (grammarSQL Hdb) CreateTable(table *dbal.Table, options ...dbal.CreateTableOption) error {
 	name := grammarSQL.ID(table.TableName)
 	sql := fmt.Sprintf("CREATE TABLE %s (\n", name)
+
+	if len(options) > 0 {
+		option := options[0]
+		if option.Temporary {
+			sql = fmt.Sprintf("CREATE GLOBAL TEMPORARY TABLE %s (\n", name)
+		}
+	}
+
 	stmts := []string{}
 	commentStmts := []string{}
 
